@@ -1,1 +1,1 @@
-![Text Triage Toolkit Screenshot](app_screenshot.png)
+![Text Triage Toolkit Screenshot](app_screenshot.PNG)
