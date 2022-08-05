@@ -34,7 +34,7 @@ st.write("\n\n")
 text = st.text_area("Text to analyze:", DEFAULT_TEXT, height=400)
 
 with st.sidebar:
-    st.image("magnifying_glass_icon_2.png", width=200)
+    st.image("assets/magnifying_glass_icon.png", width=200)
     st.write("Select models:")
     #TODO: Make checkboxes work
     st.checkbox("Translate", value=True)
