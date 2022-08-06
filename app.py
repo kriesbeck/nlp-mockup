@@ -1,4 +1,7 @@
 import spacy
+import translators as ts
+from langdetect import detect
+from langcodes import Language
 import streamlit as st
 import spacy_streamlit
 
@@ -11,27 +14,14 @@ DEFAULT_TEXT = """新华社北京8月3日电 8月3日，中共中央台办发言
 
 法网恢恢，疏而不漏。凡是以身试法的“台独”顽固分子，我们将采取刑事惩处措施，依法严惩不贷，依法终身追责。任何人、任何势力都不要低估我们捍卫国家主权和领土完整的坚强决心、坚定意志、强大能力。"""
 
-#TODO: Summarize
-summarize_zh = """ """
-
-# translated with google translate
-#TODO: Language detection
-#TODO: Translate via API
-text_en = """Xinhua News Agency, Beijing, August 3. On August 3, the spokesperson of the Taiwan Affairs Office of the Central Committee of the Communist Party of China was authorized to make a speech on punishing "Taiwan independence" diehards in accordance with the law. The full text is as follows:
-
-The "Taiwan independence" split is the biggest obstacle to the reunification of the motherland and a serious hidden danger to national rejuvenation. A very small number of "Taiwan independence" die-hards wantonly carry out "Taiwan independence" separatist activities, willing to be the pawns of external anti-China forces, and deliberately create "two Chinas", "one China, one Taiwan" and "Taiwan independence". Their "Taiwan independence" separatist words and deeds are blatant provocations. National sovereignty and territorial integrity, open provocation of national legal dignity, serious harm to the peace and stability of the Taiwan Strait, serious damage to the common interests of compatriots on both sides of the Strait and the fundamental interests of the Chinese nation, must be severely punished in accordance with the law.
-
-There is a clear legal basis for the state to pursue the criminal responsibility of "Taiwan independence" diehards. The Constitution clearly states that Taiwan is part of the sacred territory of the People's Republic of China. The Anti-Secession Law and the National Security Law clearly stipulate that China's sovereignty and territorial integrity cannot be divided. Safeguarding national sovereignty, unity and territorial integrity is the common obligation of all Chinese people, including Taiwan compatriots. Those who engage in activities endangering national security shall be investigated for legal responsibility according to law. The Criminal Law clearly stipulates that those who organize, plan, and carry out secession or undermine national reunification shall be convicted and punished as the crime of secession; those who incite secession or undermining national reunification shall be convicted and punished as the crime of inciting secession; colluding with foreign institutions, organizations, or individuals. Those who commit the above-mentioned crimes shall be severely punished according to law.
-
-The legal network is restored, sparse but not missed. We will take criminal punishment measures for those die-hard "Taiwan independence" who try the law by themselves. No one or any force should underestimate our strong determination, firm will, and strong ability to defend national sovereignty and territorial integrity."""
-
-#TODO: Summarize
-summarize_en = """ """
 
 st.title("Text Triage Toolkit")
 st.write("\n\n")
 
-text = st.text_area("Text to analyze:", DEFAULT_TEXT, height=400)
+input_text = st.text_area("Text to analyze:", DEFAULT_TEXT, height=400)
+input_language = detect(input_text)[:2]
+input_language_display = Language.make(language=input_language).display_name()
+text_en = ts.google(input_text, from_language=input_language, to_language='en')
 
 with st.sidebar:
     st.image("assets/magnifying_glass_icon.png", width=200)
@@ -45,27 +35,45 @@ with st.sidebar:
 
 col1, col2 = st.columns(2)
 
+#TODO: Summarize
+summarize_input = """ """
+
+#TODO: Summarize
+summarize_en = """ """
+
+entity_labels = ["PERSON", "DATE", "GPE", "NORP", "FAC", "ORG", "LOC", "PRODUCT", "EVENT", "MONEY"]
+
 with col1:
-    st.write(summarize_zh)
-    
-    nlp_zh = "zh_core_web_sm"
-    doc_zh = spacy_streamlit.process_text(nlp_zh, text)
-    spacy_streamlit.visualize_ner(
-        doc_zh,
-        labels=["PERSON", "DATE", "GPE"],
-        show_table=False,
-        title="Chinese entities",
-        key="chinese_ner"
-    )
+    # st.write(summarize_input)
+
+    try:
+        doc_input = spacy_streamlit.process_text(f"{input_language}_core_web_sm", input_text)
+    except:
+        try:
+            doc_input = spacy_streamlit.process_text(f"{input_language}_core_news_sm", input_text)
+        except:
+            doc_input = None
+            pass
+       
+    if doc_input:
+        spacy_streamlit.visualize_ner(
+            doc_input,
+            labels=entity_labels,
+            show_table=False,
+            title=f"{input_language_display} Entities",
+            key="input_ner"
+        )
+    else:
+        st.write("No language model available.")
 
 with col2:
-    st.write(summarize_en)
+    # st.write(summarize_en)
     
     nlp_en = "en_core_web_sm"
     doc_en = spacy_streamlit.process_text(nlp_en, text_en)
     spacy_streamlit.visualize_ner(
         doc_en,
-        labels=["PERSON", "DATE", "GPE"],
+        labels=entity_labels,
         show_table=False,
         title="English entities",
         key="english_ner"
